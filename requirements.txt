@@ -1,0 +1,27 @@
+# PyTorch with CUDA 11.8 support
+# Install with: pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu118
+# For CPU only: pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cpu
+
+# Deep Learning
+torch>=2.7.0
+torchvision>=0.22.0
+torchaudio>=2.7.0
+
+# Data Processing
+numpy>=2.0.0
+pandas>=2.0.0
+scipy>=1.10.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.13.0
+
+# Machine Learning
+scikit-learn>=1.3.0
+
+# Image Processing
+opencv-python>=4.8.0
+pillow>=10.0.0
+
+# Utilities
+tqdm>=4.65.0
