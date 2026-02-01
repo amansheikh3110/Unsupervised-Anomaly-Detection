@@ -1,0 +1,137 @@
+================================================================================
+                        I-JEPA PROJECT - UPDATE LOG
+================================================================================
+
+================================================================================
+PHASE 0: Environment Setup & Project Initialization
+Date: February 1, 2026
+Status: COMPLETED ✓
+================================================================================
+
+OBJECTIVE:
+----------
+Set up the development environment for the I-JEPA (Image-based Joint-Embedding 
+Predictive Architecture) machine learning project with proper GPU support.
+
+--------------------------------------------------------------------------------
+STEP 0.1: System Assessment
+--------------------------------------------------------------------------------
+[✓] Identified system specifications:
+    - OS: Windows 10
+    - Python: 3.13.5
+    - GPU: NVIDIA GeForce GTX 1650 (4GB VRAM)
+    - CUDA Driver: 11.7
+
+--------------------------------------------------------------------------------
+STEP 0.2: Virtual Environment Creation
+--------------------------------------------------------------------------------
+[✓] Created isolated Python virtual environment:
+    - Command: python -m venv ijepa_env
+    - Location: C:\Users\amans.AMAN\Desktop\6th_Sem_Project\ijepa_env
+
+--------------------------------------------------------------------------------
+STEP 0.3: PyTorch Installation with CUDA Support
+--------------------------------------------------------------------------------
+[✓] Installed PyTorch with CUDA 11.8 support:
+    - Command: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+    
+    Installed versions:
+    - torch: 2.7.1+cu118
+    - torchvision: 0.22.1+cu118
+    - torchaudio: 2.7.1+cu118
+
+--------------------------------------------------------------------------------
+STEP 0.4: Additional ML Libraries Installation
+--------------------------------------------------------------------------------
+[✓] Installed data science and ML packages:
+    - numpy: 2.3.5
+    - pandas: 3.0.0
+    - matplotlib: 3.10.8
+    - seaborn: 0.13.2
+    - scikit-learn: 1.8.0
+    - scipy: 1.17.0
+    - opencv-python: 4.13.0
+    - pillow: 12.0.0
+    - tqdm: 4.67.2
+
+--------------------------------------------------------------------------------
+STEP 0.5: Environment Verification
+--------------------------------------------------------------------------------
+[✓] Verified CUDA availability:
+    - CUDA Available: True
+    - CUDA Version: 11.8
+    - GPU Detected: NVIDIA GeForce GTX 1650
+    - GPU Memory: 4.0 GB
+    - GPU Tensor Test: SUCCESS
+
+[✓] Verified all packages import correctly
+
+--------------------------------------------------------------------------------
+STEP 0.6: Project Documentation
+--------------------------------------------------------------------------------
+[✓] Created README.md:
+    - Full setup instructions
+    - Package versions table
+    - Troubleshooting guide
+    - Project structure
+
+[✓] Created requirements.txt:
+    - All dependencies with version constraints
+    - Compatible with pip install
+
+[✓] Created .gitignore:
+    - Excludes virtual environment (5.7 GB saved!)
+    - Excludes Python cache files
+    - Excludes model checkpoints
+    - Excludes datasets
+    - Excludes IDE configurations
+    - Excludes OS-specific files
+
+--------------------------------------------------------------------------------
+STEP 0.7: Git Repository Initialization
+--------------------------------------------------------------------------------
+[✓] Initialized git repository
+[✓] Verified .gitignore working correctly
+[✓] Only tracking essential files (~7 KB total)
+
+================================================================================
+ISSUES ENCOUNTERED & RESOLVED:
+================================================================================
+
+1. ISSUE: ModuleNotFoundError - 'torch._strobelight'
+   CAUSE: Corrupted PyTorch installation from broken venv paths
+   SOLUTION: Deleted old venv, created fresh environment
+
+2. ISSUE: pip launcher path mismatch (OneDrive vs Desktop)
+   CAUSE: Virtual environment created in different location, hardcoded paths
+   SOLUTION: Recreated virtual environment in correct project location
+
+3. ISSUE: "No matching distribution found for torch"
+   CAUSE: cu121 index didn't have Python 3.13 wheels
+   SOLUTION: Used cu118 index which has Python 3.13 support
+
+================================================================================
+FINAL PROJECT STRUCTURE:
+================================================================================
+
+6th_Sem_Project/
+├── ijepa_env/          # Virtual environment (5.7 GB - git ignored)
+├── src.py              # Environment verification script
+├── requirements.txt    # Python dependencies
+├── README.md           # Project documentation
+├── .gitignore          # Git ignore rules
+└── new_update.txt      # This update log
+
+================================================================================
+NEXT STEPS (Phase 1):
+================================================================================
+
+[ ] Download/prepare dataset for I-JEPA training
+[ ] Implement I-JEPA architecture
+[ ] Set up data loading pipeline
+[ ] Configure training loop
+[ ] Begin model training
+
+================================================================================
+                              END OF PHASE 0
+================================================================================
