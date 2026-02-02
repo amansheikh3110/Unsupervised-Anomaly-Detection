@@ -123,15 +123,156 @@ FINAL PROJECT STRUCTURE:
 └── new_update.txt      # This update log
 
 ================================================================================
-NEXT STEPS (Phase 1):
-================================================================================
-
-[ ] Download/prepare dataset for I-JEPA training
-[ ] Implement I-JEPA architecture
-[ ] Set up data loading pipeline
-[ ] Configure training loop
-[ ] Begin model training
-
-================================================================================
                               END OF PHASE 0
+================================================================================
+
+
+
+
+================================================================================
+PHASE 1: Data Understanding & Project Structure
+Date: February 1, 2026
+Status: COMPLETED ✓
+================================================================================
+
+OBJECTIVE:
+----------
+Set up the project structure, extract and understand the MVTec AD dataset,
+and create data loading utilities for I-JEPA training.
+
+--------------------------------------------------------------------------------
+STEP 1.1: Project Structure Creation
+--------------------------------------------------------------------------------
+[✓] Created production-style project layout:
+    
+    6th_Sem_Project/
+    ├── data/                    # MVTec AD dataset
+    │   ├── bottle/
+    │   ├── cable/
+    │   ├── ... (15 categories)
+    │   └── zipper/
+    ├── src/                     # Source code modules
+    │   ├── __init__.py
+    │   ├── datasets.py          # Data loaders, transforms, patchify
+    │   ├── explore_data.py      # Data exploration & visualization
+    │   └── utils.py             # Utility functions
+    ├── checkpoints/             # Model checkpoints (future)
+    ├── results/                 # Evaluation results & visualizations
+    │   └── exploration/         # Dataset exploration images
+    └── notebooks/               # Jupyter notebooks (future)
+
+--------------------------------------------------------------------------------
+STEP 1.2: MVTec AD Dataset Extraction
+--------------------------------------------------------------------------------
+[✓] Extracted MVTec Anomaly Detection dataset from tar.xz
+[✓] Dataset structure verified:
+    
+    mvtec/
+    └── [category]/
+        ├── train/
+        │   └── good/            # Normal samples ONLY (for training)
+        ├── test/
+        │   ├── good/            # Normal test samples
+        │   └── [defect_type]/   # Various defect types
+        └── ground_truth/        # Pixel-level masks (for evaluation)
+
+--------------------------------------------------------------------------------
+STEP 1.3: Dataset Statistics
+--------------------------------------------------------------------------------
+[✓] Analyzed complete dataset:
+
+    Category        Train      Test       Good       Defect    
+    -------------------------------------------------------
+    bottle          209        83         20         63        
+    cable           224        150        58         92        
+    capsule         219        132        23         109       
+    carpet          280        117        28         89        
+    grid            264        78         21         57        
+    hazelnut        391        110        40         70        
+    leather         245        124        32         92        
+    metal_nut       220        115        22         93        
+    pill            267        167        26         141       
+    screw           320        160        41         119       
+    tile            230        117        33         84        
+    toothbrush      60         42         12         30        
+    transistor      213        100        60         40        
+    wood            247        79         19         60        
+    zipper          240        151        32         119       
+    -------------------------------------------------------
+    TOTAL           3629       1725       467        1258      
+
+    Categories: 15
+    Total Training Images (Normal): 3629
+    Total Test Images: 1725
+      - Normal (Good): 467
+      - Anomalous (Defect): 1258
+
+--------------------------------------------------------------------------------
+STEP 1.4: Data Loading Pipeline
+--------------------------------------------------------------------------------
+[✓] Created src/datasets.py with:
+    - MVTecDataset class (PyTorch Dataset)
+    - ImageNet normalization (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    - Image resize to 224x224 (ViT compatible)
+    - Training transforms (with augmentation)
+    - Evaluation transforms (without augmentation)
+    - patchify() function for ViT/I-JEPA
+    - unpatchify() function for reconstruction
+    - DataLoader utilities
+
+[✓] Key configurations:
+    - IMG_SIZE = 224
+    - PATCH_SIZE = 16
+    - Number of patches = 196 (14x14 grid)
+    - Patch dimension = 768 (16x16x3)
+
+--------------------------------------------------------------------------------
+STEP 1.5: Data Exploration & Visualization
+--------------------------------------------------------------------------------
+[✓] Created visualizations saved to results/exploration/:
+    - dataset_overview.png: Normal vs Defect for all 15 categories
+    - leather_samples.png: Detailed view of leather category defects
+    - patchification.png: How images are divided into patches
+
+[✓] Identified defect types per category:
+    - bottle: broken_large, broken_small, contamination
+    - cable: bent_wire, cable_swap, cut_inner_insulation, etc.
+    - leather: color, cut, fold, glue, poke
+    - (and more for each category)
+
+--------------------------------------------------------------------------------
+STEP 1.6: Key Learnings
+--------------------------------------------------------------------------------
+[✓] CRITICAL RULE: Train ONLY on train/good (normal samples)
+[✓] This is what makes it UNSUPERVISED anomaly detection
+[✓] Defects are diverse: texture, structural, object-level anomalies
+[✓] Test set contains both normal and anomalous for evaluation
+
+================================================================================
+FILES CREATED IN PHASE 1:
+================================================================================
+
+src/datasets.py          - MVTec dataset loader, transforms, patchify utilities
+src/utils.py             - Utility functions (seed, device, visualization)
+src/explore_data.py      - Data exploration and visualization script
+src/__init__.py          - Package initializer
+print_stats.py           - Quick statistics printer
+
+results/exploration/
+├── dataset_overview.png     - All categories normal vs defect
+├── leather_samples.png      - Detailed leather category view
+└── patchification.png       - Patch grid visualization
+
+================================================================================
+NEXT STEPS (Phase 2):
+================================================================================
+
+[ ] Build simple Autoencoder baseline (to prove I-JEPA is better)
+[ ] Train autoencoder on normal images only
+[ ] Compute reconstruction error as anomaly score
+[ ] Evaluate with ROC-AUC
+[ ] Save baseline results for comparison
+
+================================================================================
+                              END OF PHASE 1
 ================================================================================

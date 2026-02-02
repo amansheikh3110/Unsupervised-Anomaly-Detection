@@ -1,3 +1,8 @@
+# Project-specific ignores
+mvtec_anomaly_detection.tar.xz
+project_Guide.txt
+6th_sem_project_synopsis.pdf
+
 # Virtual Environment
 ijepa_env/
 venv/
@@ -141,6 +146,7 @@ checkpoints/
 *.zip
 *.tar
 *.tar.gz
+*.tar.xz
 *.rar
 *.7z
 
