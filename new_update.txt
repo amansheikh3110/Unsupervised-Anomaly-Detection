@@ -264,15 +264,92 @@ results/exploration/
 └── patchification.png       - Patch grid visualization
 
 ================================================================================
-NEXT STEPS (Phase 2):
-================================================================================
-
-[ ] Build simple Autoencoder baseline (to prove I-JEPA is better)
-[ ] Train autoencoder on normal images only
-[ ] Compute reconstruction error as anomaly score
-[ ] Evaluate with ROC-AUC
-[ ] Save baseline results for comparison
-
-================================================================================
                               END OF PHASE 1
+================================================================================
+
+
+
+
+================================================================================
+PHASE 2: Baseline Anomaly Detection (Autoencoder)
+Date: February 2026
+Status: COMPLETED ✓
+================================================================================
+
+OBJECTIVE:
+----------
+Establish a reconstruction-based baseline so we can later prove I-JEPA is better.
+Train autoencoder on normal images only; anomaly score = reconstruction error (MSE).
+
+--------------------------------------------------------------------------------
+STEP 2.1: Autoencoder Model
+--------------------------------------------------------------------------------
+[✓] Created src/model_autoencoder.py:
+    - ConvBlock / DeconvBlock
+    - Autoencoder: 224x224x3 -> encoder -> latent (256-d) -> decoder -> 224x224x3
+    - Reconstruction loss: MSE
+    - Factory: get_autoencoder(latent_dim=256, base_channels=32)
+
+--------------------------------------------------------------------------------
+STEP 2.2: Training Pipeline
+--------------------------------------------------------------------------------
+[✓] Created src/train_baseline.py:
+    - Loads MVTec train/good ONLY (one category)
+    - Optimizer: Adam, Scheduler: CosineAnnealingLR
+    - Saves checkpoint + training history JSON
+    - CLI: --category, --epochs, --batch_size, --lr, --checkpoint_dir
+
+--------------------------------------------------------------------------------
+STEP 2.3: Anomaly Scoring & Evaluation
+--------------------------------------------------------------------------------
+[✓] Created src/anomaly_eval.py:
+    - Anomaly score = per-image MSE(input, reconstruction)
+    - Metrics: ROC-AUC, Average Precision, F1 at best threshold, confusion matrix
+    - Saves: metrics_baseline.json, test_scores.npy, test_labels.npy
+
+--------------------------------------------------------------------------------
+STEP 2.4: Run Script & Verification
+--------------------------------------------------------------------------------
+[✓] Created run_baseline.py: train then evaluate in one command
+[✓] Verified: trained 2 epochs on leather, evaluated successfully
+[✓] Results saved to results/baseline/<category>/
+[✓] results/baseline/README.md: how to run and comparison table template
+
+--------------------------------------------------------------------------------
+KEY RULE
+--------------------------------------------------------------------------------
+[✓] Training uses ONLY normal (good) images — same as I-JEPA.
+[✓] Ground truth labels used ONLY for evaluation (ROC-AUC, etc.).
+
+--------------------------------------------------------------------------------
+FILES CREATED IN PHASE 2
+--------------------------------------------------------------------------------
+
+src/model_autoencoder.py   - Autoencoder model
+src/train_baseline.py      - Training script (normal images only)
+src/anomaly_eval.py        - Anomaly scoring + ROC-AUC evaluation
+run_baseline.py            - One-command train + evaluate
+results/baseline/README.md - Results description and comparison table template
+
+--------------------------------------------------------------------------------
+HOW TO RUN (FULL BASELINE)
+--------------------------------------------------------------------------------
+
+  python run_baseline.py --category leather --epochs 50
+  python run_baseline.py --category bottle --epochs 50
+
+For a proper baseline to compare with I-JEPA, run with --epochs 50 (or 100).
+
+================================================================================
+NEXT STEPS (Phase 3):
+================================================================================
+
+[ ] Implement I-JEPA architecture (context encoder, target encoder, predictor)
+[ ] Implement mask sampling (semantic-scale blocks)
+[ ] Train I-JEPA on normal images only
+[ ] Extract embeddings and build normality model (Mahalanobis / k-NN)
+[ ] Compare I-JEPA ROC-AUC with Autoencoder baseline
+
+================================================================================
+                              END OF PHASE 2
 ================================================================================

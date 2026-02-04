@@ -187,12 +187,54 @@ Look for "CUDA Version" in the output to determine which PyTorch variant to inst
 
 ```
 6th_Sem_Project/
-├── ijepa_env/          # Virtual environment (not tracked in git)
-├── src.py              # Main source file / environment verification
-├── requirements.txt    # Python dependencies
-├── README.md           # This file
-└── .gitignore          # Git ignore rules
+├── data/               # MVTec AD dataset (extracted)
+├── src/                # Source code
+│   ├── datasets.py     # MVTec loader, transforms, patchify
+│   ├── model_autoencoder.py  # Baseline autoencoder (Phase 2)
+│   ├── train_baseline.py     # Train autoencoder
+│   ├── anomaly_eval.py       # ROC-AUC evaluation
+│   ├── utils.py        # Utilities
+│   └── ...
+├── checkpoints/        # Saved models
+├── results/            # Metrics and visualizations
+├── run_baseline.py     # Train + evaluate baseline (Phase 2)
+├── src.py              # Environment verification
+├── requirements.txt
+├── README.md
+└── .gitignore
 ```
+
+## Phase 2: Baseline Autoencoder
+
+Train the reconstruction baseline (normal images only) and evaluate with ROC-AUC:
+
+```bash
+# Activate venv first, then:
+python run_baseline.py --category leather --epochs 50
+```
+
+Evaluate only (using an existing checkpoint):
+```bash
+python -m src.anomaly_eval --category leather --checkpoint checkpoints/autoencoder_leather.pth
+```
+
+Results are saved under `results/baseline/<category>/` (metrics_baseline.json, test_scores.npy, test_labels.npy). Use these as baseline to compare with I-JEPA in Phase 3.
+
+### Check a single image (Normal or Anomaly?)
+
+**Input:** Path to one image file (must be the same category the model was trained on, e.g. leather).
+
+**Output:** Anomaly score and result: "Normal" or "Anomaly (Defect)".
+
+```bash
+# Example: check a leather image
+python check_image.py data/leather/test/color/000.png --category leather
+
+# Or a normal leather image
+python check_image.py data/leather/train/good/001.png --category leather
+```
+
+The script uses the checkpoint `checkpoints/autoencoder_<category>.pth` and (if available) the threshold from `results/baseline/<category>/metrics_baseline.json`.
 
 ---
 
