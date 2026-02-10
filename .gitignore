@@ -132,7 +132,9 @@ temp/
 # Output files
 output/
 outputs/
-results/
+results/*
+!results/heatmaps/
+!results/heatmaps/*
 checkpoints/
 
 # Large media files
