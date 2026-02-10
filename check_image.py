@@ -2,12 +2,13 @@
 Check a single image for anomaly using the trained baseline autoencoder.
 
 INPUT:  Path to one image file (e.g. a leather image).
-OUTPUT: Anomaly score and answer: "Normal" or "Anomaly (Defect)".
+OUTPUT: Anomaly score, answer (Normal / Anomaly), and optional heatmap (PNG + PDF).
 
 Usage:
   python check_image.py path/to/image.png
   python check_image.py data/leather/test/color/000.png --category leather
-  python check_image.py data/leather/train/good/001.png --category leather
+  python check_image.py data/leather/test/cut/002.png --category leather
+  python check_image.py data/leather/test/cut/002.png --category leather --no-heatmap
 """
 
 import os
@@ -23,6 +24,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.datasets import eval_transform
 from src.model_autoencoder import get_autoencoder
 from src.utils import get_device
+from src.heatmap_utils import (
+    reconstruction_error_map,
+    create_and_save_heatmap,
+)
 
 
 def load_image(path: str):
@@ -57,6 +62,22 @@ def main():
         type=float,
         default=None,
         help="Anomaly threshold (default: load from results/baseline/<category>/metrics_baseline.json if exists, else 0.03)",
+    )
+    parser.add_argument(
+        "--no-heatmap",
+        action="store_true",
+        help="Skip generating and saving heatmap",
+    )
+    parser.add_argument(
+        "--heatmap-dir",
+        type=str,
+        default="results/heatmaps",
+        help="Directory to save heatmap PNG and PDF (default: results/heatmaps)",
+    )
+    parser.add_argument(
+        "--no-show",
+        action="store_true",
+        help="Do not display heatmap window (only save PNG and PDF)",
     )
     args = parser.parse_args()
 
@@ -121,6 +142,26 @@ def main():
     print("Threshold:    ", round(threshold, 6))
     print("Result:      ", answer)
     print("=" * 60)
+
+    # Heatmap: per-pixel reconstruction error, save PNG + PDF, display
+    if not args.no_heatmap:
+        error_map = reconstruction_error_map(img_tensor, recon)
+        png_path, pdf_path = create_and_save_heatmap(
+            img_tensor.cpu(),
+            recon.cpu(),
+            error_map,
+            args.image_path,
+            args.category,
+            anomaly_score=score,
+            result_label=answer,
+            threshold=threshold,
+            save_dir=args.heatmap_dir,
+            show=not args.no_show,
+        )
+        print("Heatmap saved:")
+        print("  PNG:", png_path)
+        print("  PDF:", pdf_path)
+        print("=" * 60)
 
 
 if __name__ == "__main__":
