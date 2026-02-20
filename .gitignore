@@ -4,6 +4,9 @@ project_Guide.txt
 6th_sem_project_synopsis.pdf
 PROJECT_EXPLAINED_SIMPLE.md
 
+# Always track README (ensure it gets pushed)
+!README.md
+
 # Virtual Environment
 ijepa_env/
 venv/
