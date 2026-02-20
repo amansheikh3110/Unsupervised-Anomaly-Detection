@@ -132,6 +132,7 @@ temp/
 # Output files
 output/
 outputs/
+uploads/
 results/*
 !results/heatmaps/
 !results/heatmaps/*

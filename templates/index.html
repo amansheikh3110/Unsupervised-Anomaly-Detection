@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anomaly Detection Demo | I-JEPA Baseline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-dim: #388bfd;
+      --success: #3fb950;
+      --danger: #f85149;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    header {
+      text-align: center;
+      padding: 24px 0 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin: 24px 0 20px;
+      padding: 4px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      width: fit-content;
+    }
+    .tabs button {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 0.95rem;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tabs button:hover { color: var(--text); }
+    .tabs button.active {
+      background: var(--surface2);
+      color: var(--accent);
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .category-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .category-row label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .category-row select {
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.95rem;
+      min-width: 180px;
+    }
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 48px 24px;
+      text-align: center;
+      background: var(--surface);
+      transition: all 0.2s;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .drop-zone.dragover { border-color: var(--accent); background: rgba(56,139,253,0.08); }
+    .drop-zone .icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.7; }
+    .drop-zone .hint { color: var(--text-muted); font-size: 0.9rem; }
+    .drop-zone input { display: none; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-dim); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .preview-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .preview-img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .preview-name { color: var(--text-muted); font-size: 0.85rem; }
+    .loading-wrap {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .loading-wrap.visible { display: block; }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--surface2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-wrap p { color: var(--text-muted); }
+    .result-wrap {
+      display: none;
+      margin-top: 24px;
+      padding: 24px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .result-wrap.visible { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .result-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 20px;
+    }
+    .result-badge.normal { background: rgba(63,185,80,0.2); color: var(--success); }
+    .result-badge.anomaly { background: rgba(248,81,73,0.2); color: var(--danger); }
+    .result-scores {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .score-card {
+      background: var(--surface2);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 72px;
+      border: 1px solid var(--border);
+    }
+    .score-card .value {
+      font-family: var(--font-mono);
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1.2;
+      word-break: break-all;
+    }
+    .score-card .label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      line-height: 1.2;
+      text-align: center;
+    }
+    .score-card .hint {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      opacity: 0.8;
+      text-align: center;
+      margin-top: 2px;
+      max-width: 140px;
+    }
+    .metrics-help {
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .metrics-help summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .metrics-help ul {
+      margin: 10px 0 0 18px;
+      padding: 0;
+    }
+    .metrics-help li { margin-bottom: 6px; }
+    .result-heatmap {
+      width: 100%;
+      max-width: 700px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      margin-top: 12px;
+    }
+    .result-section-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+    }
+    .gallery-item {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface2);
+    }
+    .gallery-item:hover { border-color: var(--accent); transform: scale(1.02); }
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .gallery-item .tag {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      font-size: 10px;
+      padding: 2px 4px;
+      text-align: center;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+    }
+    .gallery-item { position: relative; }
+    .split-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) { .split-layout { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .card h3 { font-size: 1rem; margin-bottom: 16px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Anomaly Detection Demo</h1>
+      <p>Baseline autoencoder · Train on normal only · Drop an image to test</p>
+    </header>
+
+    <div class="tabs">
+      <button type="button" class="active" data-tab="tester">Tester</button>
+      <button type="button" data-tab="dataset">Dataset</button>
+    </div>
+
+    <!-- Tester panel -->
+    <div id="panel-tester" class="panel active">
+      <div class="category-row">
+        <label>Category (model):</label>
+        <select id="tester-category"></select>
+      </div>
+      <div id="drop-zone" class="drop-zone">
+        <input type="file" id="file-input" accept="image/png,image/jpeg,image/jpg">
+        <div class="icon">📁</div>
+        <p><strong>Drag & drop an image here</strong> or click to choose</p>
+        <p class="hint">PNG, JPG · Use the same category as the trained model (e.g. leather)</p>
+      </div>
+      <div class="preview-row" id="preview-row" style="display: none;">
+        <img id="preview-img" class="preview-img" alt="Preview">
+        <div>
+          <p id="preview-name" class="preview-name"></p>
+          <button type="button" class="btn btn-primary" id="btn-run">Run detection</button>
+        </div>
+      </div>
+      <div id="loading-wrap" class="loading-wrap">
+        <div class="spinner"></div>
+        <p>Running model…</p>
+      </div>
+      <div id="result-wrap" class="result-wrap">
+        <div id="result-badge" class="result-badge"></div>
+        <div class="result-scores" id="result-scores"></div>
+        <details class="metrics-help">
+          <summary>What do these metrics mean?</summary>
+          <ul>
+            <li><strong>Score</strong> — Reconstruction error for this image (MSE). The model was trained only on normal images; defects are harder to reconstruct, so a <em>higher score</em> means more likely anomaly.</li>
+            <li><strong>Threshold</strong> — Cut-off chosen from the validation set. If score ≥ threshold we say &quot;Anomaly (Defect)&quot;, otherwise &quot;Normal&quot;.</li>
+            <li><strong>ROC-AUC</strong> — How well the model separates normal from defect over all possible thresholds (0–1). 1 = perfect; 0.5 = random. This is for the whole category, not this single image.</li>
+            <li><strong>Avg Precision</strong> — Summary of precision–recall trade-off. Higher is better.</li>
+            <li><strong>F1 Score</strong> — Balance of precision and recall at the best threshold. Used to pick the threshold.</li>
+          </ul>
+        </details>
+        <p class="result-section-title">Heatmap (reconstruction error)</p>
+        <img id="result-heatmap" class="result-heatmap" alt="Heatmap">
+      </div>
+    </div>
+
+    <!-- Dataset panel -->
+    <div id="panel-dataset" class="panel">
+      <div class="category-row">
+        <label>Category:</label>
+        <select id="dataset-category"></select>
+        <label>Split:</label>
+        <select id="dataset-split">
+          <option value="">All</option>
+          <option value="train">Train (good only)</option>
+          <option value="test">Test</option>
+        </select>
+      </div>
+      <p class="result-section-title">Click an image to load it into the Tester and run detection</p>
+      <div id="gallery" class="gallery"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = "/api";
+    let selectedFile = null;
+
+    // Tabs
+    document.querySelectorAll(".tabs button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    // Load categories
+    async function loadCategories() {
+      const r = await fetch(API + "/categories");
+      const cats = await r.json();
+      const withModel = cats.filter(c => c.has_model);
+      const options = withModel.length ? withModel : cats;
+      ["tester-category", "dataset-category"].forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = options.map(c =>
+          `<option value="${c.id}" ${!c.has_model ? "disabled" : ""}>${c.name}${c.has_model ? "" : " (no model)"}</option>`
+        ).join("");
+      });
+      if (options.length) {
+        const first = options.find(c => c.has_model) || options[0];
+        if (first) loadDatasetImages(first.id);
+      }
+    }
+
+    // Dataset images
+    async function loadDatasetImages(category, split = "") {
+      const r = await fetch(`${API}/dataset?category=${encodeURIComponent(category)}&split=${split || ""}`);
+      const items = await r.json();
+      const gallery = document.getElementById("gallery");
+      gallery.innerHTML = items.map(item => {
+        const src = `${API}/image?path=${encodeURIComponent(item.path)}`;
+        return `<div class="gallery-item" data-path="${item.path}" data-category="${category}" data-label="${item.defect_type}" title="${item.defect_type}">
+          <img src="${src}" alt="" loading="lazy">
+          <span class="tag">${item.defect_type}</span>
+        </div>`;
+      }).join("");
+      gallery.querySelectorAll(".gallery-item").forEach(el => {
+        el.addEventListener("click", () => {
+          const path = el.dataset.path;
+          const category = el.dataset.category;
+          document.getElementById("tester-category").value = category;
+          document.querySelector(".tabs button[data-tab=tester]").click();
+          fetch(API + "/image?path=" + encodeURIComponent(path))
+            .then(r => r.blob())
+            .then(blob => {
+              selectedFile = new File([blob], path.split("/").pop(), { type: blob.type });
+              showPreview(selectedFile);
+              runCheck();
+            });
+        });
+      });
+    }
+
+    document.getElementById("dataset-category").addEventListener("change", e => {
+      loadDatasetImages(e.target.value, document.getElementById("dataset-split").value);
+    });
+    document.getElementById("dataset-split").addEventListener("change", e => {
+      loadDatasetImages(document.getElementById("dataset-category").value, e.target.value);
+    });
+
+    // Drop zone
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("file-input");
+    dropZone.addEventListener("click", () => fileInput.click());
+    dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+    dropZone.addEventListener("drop", e => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const f = e.dataTransfer.files[0];
+      if (f && f.type.startsWith("image/")) {
+        selectedFile = f;
+        showPreview(f);
+      }
+    });
+    fileInput.addEventListener("change", e => {
+      const f = e.target.files[0];
+      if (f) { selectedFile = f; showPreview(f); }
+    });
+
+    function showPreview(file) {
+      document.getElementById("preview-row").style.display = "flex";
+      document.getElementById("preview-name").textContent = file.name;
+      const img = document.getElementById("preview-img");
+      const url = URL.createObjectURL(file);
+      img.onload = () => URL.revokeObjectURL(url);
+      img.src = url;
+      document.getElementById("result-wrap").classList.remove("visible");
+    }
+
+    function setLoading(visible) {
+      document.getElementById("loading-wrap").classList.toggle("visible", visible);
+      document.getElementById("btn-run").disabled = visible;
+    }
+
+    function setResult(data) {
+      const wrap = document.getElementById("result-wrap");
+      const badge = document.getElementById("result-badge");
+      const scoresEl = document.getElementById("result-scores");
+      const heatmapImg = document.getElementById("result-heatmap");
+
+      const isNormal = data.result.toLowerCase().includes("normal");
+      badge.textContent = data.result;
+      badge.className = "result-badge " + (isNormal ? "normal" : "anomaly");
+
+      let scoreRows = [
+        { label: "Score", value: data.score, hint: "This image’s reconstruction error. Higher = more anomalous." },
+        { label: "Threshold", value: data.threshold, hint: "Cut-off from training. Score ≥ threshold → Defect." },
+      ];
+      if (data.roc_auc != null) scoreRows.push({ label: "ROC-AUC", value: data.roc_auc, hint: "Overall model accuracy (0–1). Higher = better at separating normal vs defect." });
+      if (data.average_precision != null) scoreRows.push({ label: "Avg Precision", value: data.average_precision, hint: "Precision-recall summary. Higher = better." });
+      if (data.f1_score != null) scoreRows.push({ label: "F1 Score", value: data.f1_score, hint: "Balance of precision & recall at best threshold." });
+
+      scoresEl.innerHTML = scoreRows.map(s =>
+        `<div class="score-card"><span class="value">${s.value}</span><span class="label">${s.label}</span>${s.hint ? `<span class="hint">${s.hint}</span>` : ""}</div>`
+      ).join("");
+
+      heatmapImg.src = "/heatmaps/" + encodeURIComponent(data.heatmap_png);
+      heatmapImg.style.display = "block";
+      wrap.classList.add("visible");
+    }
+
+    async function runCheck() {
+      if (!selectedFile) return;
+      const category = document.getElementById("tester-category").value;
+      const fd = new FormData();
+      fd.append("image", selectedFile);
+      fd.append("category", category);
+      setLoading(true);
+      document.getElementById("result-wrap").classList.remove("visible");
+      try {
+        const r = await fetch(API + "/check", { method: "POST", body: fd });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || "Check failed");
+        setResult(data);
+      } catch (e) {
+        alert(e.message || "Error running detection");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    document.getElementById("btn-run").addEventListener("click", runCheck);
+    loadCategories();
+  </script>
+</body>
+</html>

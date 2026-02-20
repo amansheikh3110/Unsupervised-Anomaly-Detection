@@ -236,6 +236,21 @@ python check_image.py data/leather/train/good/001.png --category leather
 
 The script uses the checkpoint `checkpoints/autoencoder_<category>.pth` and (if available) the threshold from `results/baseline/<category>/metrics_baseline.json`.
 
+## Web UI (Demo / Presentation)
+
+Run the interactive web interface (no terminal commands needed for testing):
+
+```bash
+python app.py
+```
+
+Then open **http://127.0.0.1:5000** in your browser.
+
+- **Tester:** Drag & drop any image (or click to choose), pick the category (e.g. leather), click **Run detection**. You get a processing animation, then the result with score, Normal/Anomaly badge, heatmap, and metrics (ROC-AUC, F1, etc.).
+- **Dataset:** Browse all dataset images by category and split (train/test). Click an image to load it into the Tester and run detection automatically.
+
+Requires: `flask` (see `requirements.txt`). The same ML model and heatmap logic are used; only the interface is web-based.
+
 ---
 
 ## License

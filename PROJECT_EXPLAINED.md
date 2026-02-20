@@ -9,7 +9,7 @@ This document explains **what this project is**, **what we did so far**, and **w
 Imagine a **factory** that makes bottles, leather bags, or electronic parts. Before shipping, someone has to **check each item** to see if it has a **defect** (crack, scratch, wrong color, missing part, etc.).
 
 - **Humans doing this** = slow, expensive, and they get tired and miss defects.
-- **Teaching a computer with lots of photos of defects** = in real factories you **don’t have many defect photos** (defects are rare), so that’s hard.
+- **Teaching a computer with lots of photosb of defects** = in real factories you **don’t have many defect photos** (defects are rare), so that’s hard.
 
 So the question is:
 

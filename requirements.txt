@@ -25,3 +25,7 @@ pillow>=10.0.0
 
 # Utilities
 tqdm>=4.65.0
+
+# Web UI
+flask>=3.0.0
+werkzeug>=3.0.0

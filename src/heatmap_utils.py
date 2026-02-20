@@ -67,7 +67,10 @@ def create_and_save_heatmap(
         (path_to_png, path_to_pdf)
     """
     os.makedirs(save_dir, exist_ok=True)
-    base_name = heatmap_filename_from_path(image_path, category)
+    if "upload" in image_path.lower() or os.path.basename(image_path).startswith("upload_"):
+        base_name = "heatmap_" + os.path.splitext(os.path.basename(image_path))[0]
+    else:
+        base_name = heatmap_filename_from_path(image_path, category)
 
     # Original image for display (denormalized)
     img_np = tensor_to_numpy(input_tensor)
