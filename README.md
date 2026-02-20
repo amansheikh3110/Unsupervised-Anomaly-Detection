@@ -256,3 +256,4 @@ Requires: `flask` (see `requirements.txt`). The same ML model and heatmap logic 
 ## Author
 
 [Aman Sheikh] - 6th Semester Project
+
