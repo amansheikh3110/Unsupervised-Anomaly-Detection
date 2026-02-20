@@ -253,10 +253,6 @@ Requires: `flask` (see `requirements.txt`). The same ML model and heatmap logic 
 
 ---
 
-## License
-
-[Add your license here]
-
 ## Author
 
-[Your Name] - 6th Semester Project
+[Aman Sheikh] - 6th Semester Project
