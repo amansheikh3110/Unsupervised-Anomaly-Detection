@@ -238,10 +238,6 @@ The script uses the checkpoint `checkpoints/autoencoder_<category>.pth` and (if 
 
 ---
 
-## License
-
-[Add your license here]
-
 ## Author
 
-[Your Name] - 6th Semester Project
+[Aman Sheikh] - 6th Semester Project
