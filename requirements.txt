@@ -29,3 +29,6 @@ tqdm>=4.65.0
 # Web UI
 flask>=3.0.0
 werkzeug>=3.0.0
+
+# Presentation
+python-pptx>=0.6.21

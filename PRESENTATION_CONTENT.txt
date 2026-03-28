@@ -1,0 +1,456 @@
+================================================================================
+  POWERPOINT PRESENTATION CONTENT
+  Unsupervised Anomaly Detection Using Deep Representation Learning
+  (I-JEPA-Based Industry-Grade AI)
+  Group A-5 | Semester VI | 2025-26
+================================================================================
+
+INSTRUCTIONS FOR YOU:
+• Create a folder named "papers" in the project root and place these PDFs:
+  - traditional_autoencoder.pdf
+  - I-JEPA.pdf (Assran et al., 2023)
+  - Unreliability of autoencoders.pdf
+  - dataset information.pdf (or MVTec AD paper)
+• Where this document says "use Figure X from [filename].pdf", open that PDF,
+  find the best matching figure (architecture, results, or tables), note its
+  figure number and page, and insert it on the slide. Replace "Figure X" with
+  the actual figure number (e.g. "Figure 2").
+• Replace any placeholder citations with the exact full citation from each
+  paper's own reference list at the end of the PDF.
+
+================================================================================
+1. INTRODUCTION
+================================================================================
+
+--- SLIDE: Title ---
+• Unsupervised Anomaly Detection Using Deep Representation Learning
+  (I-JEPA-Based Industry-Grade AI)
+• Shri Ramdeobaba College of Engineering & Management, Nagpur
+• Department of Computer Science & Engineering | Semester VI | Section A
+• Group A-5: Aman Sheikh, Aadil Pathan, Aryan Jaiswal
+• Guide: Dr. P. Sonsare
+
+--- SLIDE: Introduction ---
+• Problem we are solving:
+  – In manufacturing, visual inspection for defects is critical but costly and
+    error-prone when done manually.
+  – Supervised methods need large labelled defect data, which is scarce in
+    industry; defects are rare, diverse, and often unseen during training.
+  – Existing unsupervised methods (e.g. reconstruction-based) detect anomalies
+    via reconstruction error but often miss high-level semantic defects
+    (structural anomalies, missing components).
+
+• High-level idea of our solution:
+  – We build an unsupervised system that learns only from normal (good) images.
+  – Phase 1 (current): Baseline using a convolutional autoencoder; anomaly
+    score = reconstruction error (MSE).
+  – Phase 2 (planned): Replace pixel-level reconstruction with I-JEPA
+    (Image-based Joint-Embedding Predictive Architecture), which learns
+    semantic representations in latent space and predicts masked regions in
+    that space. Anomalies are then detected as deviations from the learned
+    normal distribution in the latent space.
+
+================================================================================
+2. MOTIVATION
+================================================================================
+
+--- SLIDE: Motivation ---
+• Why this project is necessary:
+  – Manual inspection: slow, expensive, inconsistent; not scalable.
+  – Supervised defect detection: requires many labelled defect samples; poor
+    generalization to novel defect types (Ruff et al., 2021; Bergmann et al., 2019).
+  – Reconstruction-based unsupervised methods (e.g. autoencoders): optimize
+    pixel-level reconstruction, which does not guarantee semantic
+    consistency; they can fail on structural or semantic anomalies and are
+    sensitive to texture (Baur et al.; you may cite your "Unreliability of
+    autoencoders" paper here for statistical evidence).
+
+• Research gap:
+  – Need for methods that learn semantic, invariant representations of
+    "normal" and detect anomalies as deviations in representation space,
+    without any defect labels.
+
+• Real-world impact:
+  – Automated visual inspection, quality control in manufacturing, surface
+    defect detection, semiconductor and packaging verification (Bergmann
+    et al., 2019; synopsis).
+
+================================================================================
+3. LITERATURE REVIEW
+================================================================================
+
+--- SLIDE: Literature Review — Traditional Autoencoder ---
+• Source: Use your "Traditional Autoencoder" paper from the papers folder.
+
+• Core idea:
+  – Autoencoder: encoder maps input x to latent z; decoder maps z to
+    reconstruction x̂. Trained to minimize reconstruction loss (e.g. MSE).
+  – In anomaly detection: train only on normal data; at test time, high
+    reconstruction error is used as anomaly score (e.g. Sakurada & Yairi, 2014;
+    or reference from your PDF).
+
+• Key equation (include on slide):
+  – Reconstruction loss (MSE):  L_rec = (1/n) Σ ‖x − x̂‖²
+  – Anomaly score:  s(x) = ‖x − Dec(Enc(x))‖²  (or mean over pixels).
+
+• Advantages:
+  – Unsupervised; no defect labels needed.
+  – Simple to implement and train; interpretable (reconstruction error).
+
+• Limitations:
+  – Optimizes pixel-level reconstruction, not semantic fidelity; can
+    reconstruct some anomalies well (low error) and some normals poorly
+    (high error).
+  – May focus on low-level texture; weak on structural/semantic anomalies.
+
+• Diagram to use:
+  – On this slide, use the figure from your traditional_autoencoder.pdf that
+    shows the standard bottleneck architecture (encoder → latent → decoder).
+  – Instruction: Open "traditional_autoencoder.pdf", find the figure
+    illustrating the autoencoder architecture (typically one showing input,
+    bottleneck, and reconstruction). Insert that figure here and cite it
+    (e.g. "Figure X from [Author et al., year].").
+
+• Inline citation:
+  – "The standard autoencoder for anomaly detection learns a bottleneck
+    representation and reconstructs the input; anomalies are flagged by
+    high reconstruction error (e.g. [full citation from your autoencoder
+    paper reference list])."
+
+--- SLIDE: Literature Review — Unreliability of Autoencoders ---
+• Source: Use your "Unreliability of autoencoders" paper from the papers folder.
+
+• Core idea:
+  – Reconstruction error alone is an unreliable indicator of anomaly when
+    the model is trained only on normal data; statistical and empirical
+    evidence from the paper.
+
+• Key points to extract (and cite from the PDF):
+  – Cases where autoencoders assign low reconstruction error to anomalous
+    samples or high error to normal samples.
+  – Mathematical or statistical arguments (e.g. distribution of scores,
+    overlap between normal/anomaly score distributions).
+  – Why this motivates moving to representation-based methods (e.g. latent
+    space, semantic features) rather than pixel reconstruction.
+
+• Diagram/table to use:
+  – Use the figure or table from "Unreliability of autoencoders.pdf" that
+    best shows failure cases or score distributions (e.g. ROC curves,
+    histograms, or example images with reconstruction errors). Insert that
+    figure and cite: "Figure X from [full citation from the paper]."
+
+• Inline citation:
+  – "Studies have shown that reconstruction-based anomaly detection can be
+    unreliable [cite your unreliability paper]; this motivates
+    representation-based approaches such as I-JEPA."
+
+--- SLIDE: Literature Review — I-JEPA ---
+• Source: Assran et al. (2023), "Self-Supervised Learning from Images with a
+  Joint-Embedding Predictive Architecture" (I-JEPA). Use the I-JEPA paper
+  from your papers folder.
+
+• Core idea:
+  – I-JEPA predicts representations of target image regions from context
+    regions in the same image, in a joint embedding space. It does not
+    reconstruct pixels; it predicts latent representations of masked patches
+    from visible (context) patches.
+  – Components: context encoder (processes visible patches), target encoder
+    (processes masked patches; often EMA-updated), predictor (maps context
+    representation to predicted target representation).
+  – Training: minimize distance (e.g. MSE) between predicted and target
+    representations (with stop-gradient on target).
+
+• Key equation (from I-JEPA; include on slide):
+  – Let s be context (visible) patches and t be target (masked) patches.
+  – Context encoding:  z_s = f_θ(s);  target encoding:  z_t = g_ξ(t)  (ξ may
+    be EMA of θ).
+  – Prediction:  p_θ(z_s) ≈ z_t.
+  – Loss (e.g. L2):  L = ‖p_θ(z_s) − stop_grad(z_t)‖²
+  – Reference: Assran et al. (2023), Section 3; use the exact equation from
+    the paper and cite it.
+
+• Advantages:
+  – Learns semantic, high-level representations; not tied to pixel
+    reconstruction.
+  – Predicts in latent space; robust to irrelevant pixel variations.
+  – Well-suited for downstream tasks (e.g. anomaly detection as deviation
+    in latent space).
+
+• Limitations:
+  – More complex than autoencoders; requires careful design of masking and
+    architecture (Assran et al., 2023).
+
+• Diagram to use:
+  – Use the main method figure from the I-JEPA paper (typically shows
+    context encoder, target encoder, predictor, and masking). Open
+    "I-JEPA.pdf", find the figure that illustrates the architecture (often
+    Figure 1 or 2). Insert it and cite: "Figure X from Assran et al. (2023)."
+
+• Inline citation:
+  – "I-JEPA (Assran et al., 2023) learns by predicting latent representations
+    of masked image regions from context, avoiding pixel reconstruction and
+    capturing semantic structure."
+
+--- SLIDE: Literature Review — Summary Table (optional) ---
+• Present a short comparison table:
+  – Method: Autoencoder | I-JEPA
+  – Learning signal: Pixel reconstruction | Latent prediction
+  – Anomaly cue: Reconstruction error | Deviation in latent space
+  – Semantic awareness: Limited | Strong (per Assran et al., 2023)
+  – Cite each row with the corresponding paper.
+
+================================================================================
+4. PROPOSED METHODOLOGY
+================================================================================
+
+--- SLIDE: Proposed Methodology — Overview ---
+• Step-by-step solution:
+  1. Data: Use MVTec AD (Bergmann et al., 2019). Training: only normal
+     (good) images per object category. Test: normal + defective images.
+  2. Preprocessing: Resize to 224×224; normalize with ImageNet mean/std
+     (0.485, 0.456, 0.406 / 0.229, 0.224, 0.225).
+  3. Baseline (current): Train convolutional autoencoder on normal images
+     only. Anomaly score = MSE(input, reconstruction). Threshold from
+     validation (e.g. best F1).
+  4. Future (I-JEPA): Train I-JEPA on normal images (patchify → mask →
+     context/target encoders → predictor → MSE in latent space). Extract
+     context encoder embeddings for all normal images; fit normality model
+     (e.g. Mahalanobis, k-NN, or One-Class SVM). At test: embedding →
+     distance to normal model = anomaly score.
+  5. Evaluation: ROC-AUC, average precision, F1, precision/recall (labels
+     used only for evaluation).
+
+--- SLIDE: Flow Diagram (describe for drawing) ---
+• Create a single flow diagram with these components and arrows:
+
+  [Data] MVTec AD (train: good only; test: good + defect)
+      ↓
+  [Preprocessing] Resize 224×224, ImageNet normalize
+      ↓
+  [Model]
+  – Current: Autoencoder (Encoder → Latent z → Decoder → Reconstruction x̂).
+  – Future: I-JEPA (Image → Patchify → Mask → Context Encoder → z_ctx;
+    Target Encoder (EMA) → z_tgt; Predictor: z_ctx → p(z_tgt); Loss: ‖p − z_tgt‖²).
+      ↓
+  [Training] Normal images only. Loss: MSE (AE) or latent MSE (I-JEPA).
+  Optimizer: Adam/AdamW. Save checkpoint.
+      ↓
+  [Inference]
+  – AE: Anomaly score = MSE(x, x̂) per image.
+  – I-JEPA: Embed image → score = distance to normal model (e.g. Mahalanobis).
+      ↓
+  [Evaluation] Compare scores to ground truth; compute ROC-AUC, AP, F1.
+  (Optional: per-patch scores → heatmap for localization.)
+
+• Label each box clearly (Data, Preprocessing, Encoder, Decoder/Predictor,
+  Training Loop, Anomaly Score, Evaluation). Use a single colour for
+  "current baseline" and another for "future I-JEPA" if you show both paths.
+
+================================================================================
+5. TECH STACK
+================================================================================
+
+--- SLIDE: Tech Stack ---
+• Present in a clean two-column or grid layout:
+
+  Language & runtime
+  • Python 3.10+
+
+  Deep learning
+  • PyTorch 2.7 (with CUDA 11.8)
+  • torchvision, torchaudio
+
+  Data & numerical
+  • NumPy, Pandas, SciPy
+
+  Machine learning & evaluation
+  • Scikit-learn (metrics, k-NN, OCSVM, etc.)
+
+  Visualization & imaging
+  • Matplotlib, Seaborn
+  • OpenCV, Pillow
+
+  Web demo
+  • Flask, Werkzeug
+
+  Development
+  • tqdm, Jupyter (optional)
+
+• Optional: One line under the slide: "All dependencies listed in
+  requirements.txt; environment reproducible via venv."
+
+================================================================================
+6. IMPLEMENTATION / DEMO
+================================================================================
+
+--- SLIDE: Current Implementation Status ---
+• What we have built so far:
+  – Phase 0: Environment (Python, PyTorch, CUDA, venv); all libraries
+    installed and verified.
+  – Phase 1: MVTec AD loaded and preprocessed; dataset API (train/test,
+    category, patchify); data exploration and visualizations.
+  – Phase 2: Baseline convolutional autoencoder (224×224 → encoder →
+    latent 256-d → decoder → 224×224); training pipeline (train on
+    normal only, Adam, CosineAnnealingLR); evaluation pipeline (per-image
+    MSE as anomaly score; ROC-AUC, AP, F1, confusion matrix); heatmap
+    generation (per-pixel reconstruction error); single-image check
+    script and Web UI.
+
+• Key modules / functions:
+  – src/datasets.py: MVTecDataset, patchify, get_dataloader, transforms.
+  – src/model_autoencoder.py: Autoencoder, ConvBlock, DeconvBlock,
+    reconstruction_loss.
+  – src/train_baseline.py: train_one_epoch, training loop, checkpoint save.
+  – src/anomaly_eval.py: compute_anomaly_scores, evaluate (ROC-AUC, etc.).
+  – src/heatmap_utils.py: reconstruction_error_map, create_and_save_heatmap.
+  – backend.py: run_anomaly_check (used by Web UI); list_categories,
+    list_dataset_images.
+  – run_baseline.py: one-command train + evaluate. check_image.py: CLI
+    single-image check + heatmap. app.py: Flask Web UI.
+
+• Quantitative result to state (adjust if you have run 50 epochs):
+  – "Baseline autoencoder trained on MVTec AD (e.g. leather category);
+    evaluation yields ROC-AUC, average precision, and F1 (see
+    results/baseline/<category>/metrics_baseline.json). Full training
+    (e.g. 50 epochs) recommended for reported numbers."
+
+--- SLIDE: Demo Suggestions ---
+• Live demo options:
+  1. Terminal: Run `python run_baseline.py --category leather --epochs 2`
+     (short run) or show pre-trained checkpoint with
+     `python check_image.py data/leather/test/cut/002.png --category leather`;
+     show terminal output (score, threshold, Normal/Anomaly) and generated
+     heatmap (PNG/PDF).
+  2. Web UI: Run `python app.py`; open http://127.0.0.1:5000. Show (a)
+     Dataset tab: browse leather images, click one to run detection; (b)
+     Tester tab: drag-and-drop an image, Run detection, show result card
+     (score, threshold, ROC-AUC, F1), heatmap, and "What do these metrics
+     mean?" section.
+  3. Code: Briefly show model definition (e.g. Autoencoder in
+     model_autoencoder.py) and training loop (train_baseline.py) to
+     emphasize that only normal data is used.
+
+================================================================================
+7. DATASET INFORMATION
+================================================================================
+
+--- SLIDE: Dataset — MVTec AD ---
+• Dataset name and citation:
+  – MVTec Anomaly Detection (MVTec AD) dataset.
+  – Cite using the reference from your dataset PDF or the standard citation:
+    Bergmann, P., Batzner, K., Fauser, M., Sattlegger, D., & Steger, C. (2019).
+    The MVTec Anomaly Detection Dataset: A Comprehensive Real-World Dataset for
+    Unsupervised Anomaly Detection. International Journal of Computer Vision
+    (or the exact venue and year from your dataset paper's reference list).
+  – If your papers folder contains a dataset PDF, use the exact citation
+    from that PDF's reference list for "MVTec AD" or "MVTec dataset."
+
+• Description:
+  – Real-world industrial images: 15 object/texture categories (e.g. bottle,
+    cable, capsule, carpet, grid, hazelnut, leather, metal_nut, pill, screw,
+    tile, toothbrush, transistor, wood, zipper).
+  – Per category: training set contains only defect-free (good) images; test
+    set contains good and defective images with multiple defect types.
+  – Pixel-level ground-truth masks for defective test images (for
+    localization evaluation).
+
+• Size and splits (from our pipeline):
+  – Total training images (normal only): 3,629 across 15 categories.
+  – Total test images: 1,725 (normal + defective).
+  – Example: leather — train 245 good; test 124 (32 good, 92 defective across
+    defect types: color, cut, fold, glue, poke).
+
+• Preprocessing we apply:
+  – Resize to 224×224; ImageNet normalization (mean [0.485, 0.456, 0.406],
+    std [0.229, 0.224, 0.225]); optional augmentation (flip) for training only.
+  – Train on train/good only; no defect images used in training (unsupervised
+    setting).
+
+================================================================================
+8. WORK TO BE DONE BEFORE SEMESTER END
+================================================================================
+
+--- SLIDE: Future Work ---
+• Foundation for next phase:
+  – "Our future work is based on the I-JEPA architecture (Assran et al.,
+    2023), which learns semantic representations by predicting masked
+    region representations from context, rather than reconstructing pixels."
+
+• Specific next steps (cite I-JEPA where appropriate):
+  1. Implement the I-JEPA architecture as described in Assran et al. (2023):
+     context encoder, target encoder (EMA), predictor, and semantic-scale
+     masking strategy.
+  2. Integrate I-JEPA with our existing data pipeline (MVTec AD, 224×224,
+     patchify) and train on normal images only.
+  3. Extract embeddings from the trained context encoder; fit normality
+     models (Mahalanobis distance, k-NN, or One-Class SVM) on normal
+     embeddings.
+  4. Compute anomaly scores as distance to the normal model; evaluate
+     ROC-AUC, AP, F1 per category.
+  5. Conduct comparative experiments: baseline autoencoder vs. I-JEPA on
+     MVTec AD; report ROC-AUC (and optionally localization) and discuss
+     why I-JEPA is expected to outperform reconstruction-based methods
+     (semantic representation vs. pixel reconstruction; cite unreliability
+     paper).
+  6. Optional: ablation studies (mask ratio, normality model, backbone);
+     visualization (t-SNE/PCA of embeddings, heatmaps).
+
+• Reference for this slide:
+  – "The I-JEPA implementation and masking strategy will follow Assran et al.
+    (2023). Anomaly detection in latent space follows the same principle as
+    in our baseline (deviation from normal) but using I-JEPA embeddings
+    instead of reconstruction error."
+
+================================================================================
+9. REFERENCES (FULL CITATIONS)
+================================================================================
+
+--- SLIDE: References ---
+• Use the exact full citations from each paper's own reference list. Below
+  are standard-form citations; replace with the exact text from your PDFs
+  when available.
+
+• I-JEPA (use exact from I-JEPA paper):
+  Assran, M., Duval, Q., Misra, I., Bojanowski, P., Vincent, P., Rabbat, M.,
+  & LeCun, Y. (2023). Self-Supervised Learning from Images with a
+  Joint-Embedding Predictive Architecture. Proceedings of the IEEE/CVF
+  Conference on Computer Vision and Pattern Recognition (CVPR), 2023.
+  (Replace with the exact citation from the I-JEPA PDF reference list.)
+
+• MVTec AD dataset (use exact from dataset PDF):
+  Bergmann, P., Batzner, K., Fauser, M., Sattlegger, D., & Steger, C. (2019).
+  The MVTec Anomaly Detection Dataset: A Comprehensive Real-World Dataset for
+  Unsupervised Anomaly Detection. International Journal of Computer Vision,
+  129(4), 1038–1059. https://doi.org/10.1007/s11263-020-01400-4
+  (Or the exact citation from your dataset paper.)
+
+• Traditional autoencoder (use exact from your traditional_autoencoder PDF):
+  [Insert the full reference from the reference list of
+  "traditional_autoencoder.pdf" for the autoencoder method you used.]
+
+• Unreliability of autoencoders (use exact from your unreliability PDF):
+  [Insert the full reference from the reference list of
+  "Unreliability of autoencoders.pdf".]
+
+• Optional additional:
+  – Ruff, L., et al. (2021). Unifying review of deep and one-class
+    classification. (If you cite one-class / anomaly surveys.)
+  – Hinton, G. E., & Salakhutdinov, R. R. (2006). Reducing the
+    dimensionality of data with neural networks. Science. (Classic
+    autoencoder; use only if cited in your autoencoder paper.)
+
+• Instruction for judges:
+  – "All figures and equations are from the cited papers; full references
+    are listed above. Replace any placeholder citations with the exact
+    references from the corresponding PDFs in our papers folder."
+
+================================================================================
+END OF PRESENTATION CONTENT
+================================================================================
+
+Quick checklist before presenting:
+□ Insert actual figures from papers (traditional AE, unreliability, I-JEPA, dataset).
+□ Replace placeholder references with exact citations from each PDF.
+□ Draw the methodology flow diagram as described in Section 4.
+□ Update implementation slide with latest ROC-AUC/F1 if you have run 50 epochs.
+□ Prepare live demo (CLI or Web UI) and backup screenshots.
