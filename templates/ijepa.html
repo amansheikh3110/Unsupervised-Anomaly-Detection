@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>I-JEPA Anomaly Detection</title>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0d1117; --surface:#161b22; --card:#21262d; --border:#30363d;
+  --text:#c9d1d9; --muted:#8b949e; --accent:#58a6ff;
+  --green:#3fb950; --green-glow:rgba(63,185,80,.35);
+  --red:#f85149;   --red-glow:rgba(248,81,73,.35);
+  --yellow:#d29922;
+}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;}
+
+/* ── Layout ───────────────────────────────────────────────────── */
+.app{display:flex;height:100vh;}
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+.sidebar{
+  width:260px;min-width:260px;background:var(--surface);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.sidebar-header{
+  padding:20px 18px 14px;border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);
+}
+.sidebar-header .logo{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.logo-icon{
+  width:36px;height:36px;background:linear-gradient(135deg,#58a6ff,#a371f7);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:900;color:#fff;flex-shrink:0;
+}
+.sidebar-header h1{font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;}
+.sidebar-header p{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.sidebar-search{padding:10px 14px;border-bottom:1px solid var(--border);}
+.sidebar-search input{
+  width:100%;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;outline:none;
+}
+.sidebar-search input:focus{border-color:var(--accent);}
+
+.cat-list{overflow-y:auto;flex:1;padding:8px 0;}
+.cat-list::-webkit-scrollbar{width:4px;}
+.cat-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+.cat-item{
+  display:flex;align-items:center;gap:10px;padding:9px 16px;
+  cursor:pointer;border-left:3px solid transparent;
+  transition:background .15s,border-color .15s;position:relative;
+}
+.cat-item:hover{background:var(--card);}
+.cat-item.active{background:rgba(88,166,255,.1);border-left-color:var(--accent);}
+.cat-item.active .cat-name{color:var(--accent);}
+
+.cat-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.cat-dot.trained{background:var(--green);box-shadow:0 0 6px var(--green-glow);}
+.cat-dot.untrained{background:var(--border);}
+
+.cat-name{font-size:13px;font-weight:500;flex:1;}
+.cat-auc{
+  font-size:10px;color:var(--muted);background:var(--border);
+  padding:2px 6px;border-radius:10px;
+}
+.cat-item.trained-cat .cat-auc{color:var(--green);background:rgba(63,185,80,.15);}
+
+.sidebar-footer{
+  padding:12px 16px;border-top:1px solid var(--border);
+  font-size:11px;color:var(--muted);text-align:center;
+}
+.legend{display:flex;gap:14px;justify-content:center;margin-bottom:6px;}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;}
+.leg-dot{width:7px;height:7px;border-radius:50%;}
+
+/* ── Main ─────────────────────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Top bar ──────────────────────────────────────────────────── */
+.topbar{
+  padding:16px 24px;border-bottom:1px solid var(--border);
+  background:var(--surface);display:flex;align-items:center;
+  justify-content:space-between;gap:16px;flex-shrink:0;
+}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.cat-title{font-size:20px;font-weight:700;color:#fff;}
+.badge{
+  padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.badge.trained{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.3);}
+.badge.untrained{background:rgba(139,148,158,.1);color:var(--muted);border:1px solid var(--border);}
+
+.topbar-stats{display:flex;gap:20px;}
+.stat{text-align:center;}
+.stat-val{font-size:16px;font-weight:700;color:var(--accent);}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+
+/* ── Upload strip ─────────────────────────────────────────────── */
+.upload-strip{
+  padding:8px 24px;border-bottom:1px solid var(--border);
+  background:rgba(88,166,255,.04);display:flex;align-items:center;gap:12px;
+  flex-shrink:0;
+}
+.upload-strip label{
+  display:flex;align-items:center;gap:7px;cursor:pointer;
+  background:var(--card);border:1px dashed var(--border);
+  padding:6px 14px;border-radius:8px;font-size:12px;color:var(--muted);
+  transition:border-color .2s,color .2s;
+}
+.upload-strip label:hover{border-color:var(--accent);color:var(--accent);}
+.upload-strip input{display:none;}
+.upload-strip span{font-size:11px;color:var(--muted);}
+
+/* ── Content area ─────────────────────────────────────────────── */
+.content{flex:1;display:flex;overflow:hidden;}
+
+/* ── Image panel ──────────────────────────────────────────────── */
+.img-panel{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;
+  border-right:1px solid var(--border);
+}
+
+.tabs{
+  display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);
+  background:var(--surface);overflow-x:auto;flex-shrink:0;
+}
+.tabs::-webkit-scrollbar{height:3px;}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);}
+
+.tab{
+  padding:10px 16px;font-size:12px;font-weight:500;cursor:pointer;
+  border-bottom:2px solid transparent;color:var(--muted);white-space:nowrap;
+  transition:color .2s,border-color .2s;text-transform:capitalize;
+}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab.defect-tab.active{color:var(--red);border-bottom-color:var(--red);}
+.tab .tab-count{
+  margin-left:5px;background:var(--border);border-radius:10px;
+  padding:1px 6px;font-size:10px;
+}
+.tab.active .tab-count{background:rgba(88,166,255,.2);color:var(--accent);}
+.tab.defect-tab.active .tab-count{background:rgba(248,81,73,.2);color:var(--red);}
+
+.grid-scroll{flex:1;overflow-y:auto;padding:14px;}
+.grid-scroll::-webkit-scrollbar{width:5px;}
+.grid-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}
+
+.img-card{
+  background:var(--card);border:2px solid var(--border);border-radius:10px;
+  overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s,box-shadow .2s;
+  position:relative;
+}
+.img-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.img-card.active-card{border-color:var(--accent);box-shadow:0 0 0 2px rgba(88,166,255,.3);}
+
+.img-card img{
+  width:100%;aspect-ratio:1;object-fit:cover;display:block;
+  transition:opacity .2s;
+}
+.img-card .img-name{
+  padding:4px 6px;font-size:10px;color:var(--muted);text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-top:1px solid var(--border);
+}
+.img-card .run-btn{
+  position:absolute;inset:0;background:rgba(88,166,255,.85);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;letter-spacing:.5px;
+  opacity:0;transition:opacity .2s;
+}
+.img-card:hover .run-btn{opacity:1;}
+
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;color:var(--muted);gap:12px;
+}
+.empty-state .icon{font-size:48px;opacity:.3;}
+.empty-state p{font-size:13px;}
+
+/* ── Result panel ─────────────────────────────────────────────── */
+.result-panel{
+  width:360px;min-width:360px;display:flex;flex-direction:column;
+  background:var(--surface);overflow-y:auto;
+}
+.result-panel::-webkit-scrollbar{width:5px;}
+.result-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+.result-header{
+  padding:16px 18px 12px;border-bottom:1px solid var(--border);
+  font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;
+}
+
+/* Idle state */
+.result-idle{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;padding:30px 20px;color:var(--muted);
+}
+.result-idle .idle-icon{font-size:52px;opacity:.25;}
+.result-idle p{font-size:13px;text-align:center;line-height:1.6;}
+
+/* Loading */
+.result-loading{
+  flex:1;display:none;flex-direction:column;align-items:center;
+  justify-content:center;gap:20px;padding:30px;
+}
+.spinner{
+  width:52px;height:52px;border:4px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:13px;color:var(--muted);}
+
+/* Result */
+.result-content{display:none;flex-direction:column;gap:0;}
+
+.verdict-box{
+  margin:16px;border-radius:14px;padding:20px 16px;text-align:center;
+  position:relative;overflow:hidden;
+  transition:all .4s ease;
+}
+.verdict-box.normal{
+  background:rgba(63,185,80,.08);
+  border:2px solid rgba(63,185,80,.4);
+  box-shadow:0 0 30px rgba(63,185,80,.15),inset 0 0 20px rgba(63,185,80,.05);
+}
+.verdict-box.anomaly{
+  background:rgba(248,81,73,.08);
+  border:2px solid rgba(248,81,73,.4);
+  box-shadow:0 0 30px rgba(248,81,73,.2),inset 0 0 20px rgba(248,81,73,.05);
+  animation:pulse-red 2s ease-in-out infinite;
+}
+@keyframes pulse-red{
+  0%,100%{box-shadow:0 0 20px rgba(248,81,73,.2),inset 0 0 20px rgba(248,81,73,.05);}
+  50%{box-shadow:0 0 40px rgba(248,81,73,.4),inset 0 0 25px rgba(248,81,73,.1);}
+}
+
+.verdict-icon{font-size:36px;margin-bottom:8px;}
+.verdict-label{
+  font-size:26px;font-weight:900;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:4px;
+}
+.verdict-box.normal .verdict-label{color:var(--green);}
+.verdict-box.anomaly .verdict-label{color:var(--red);}
+.verdict-sub{font-size:11px;color:var(--muted);}
+
+.score-section{padding:12px 16px;border-bottom:1px solid var(--border);}
+.score-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.score-row .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.score-row .val{font-size:13px;font-weight:600;color:var(--text);}
+
+.score-bar-wrap{background:var(--border);border-radius:6px;height:8px;overflow:hidden;margin-bottom:6px;}
+.score-bar{height:100%;border-radius:6px;transition:width .6s ease,background .4s;}
+.score-bar.normal-bar{background:linear-gradient(90deg,#238636,var(--green));}
+.score-bar.anomaly-bar{background:linear-gradient(90deg,#da3633,var(--red));}
+
+.thresh-line{
+  position:relative;height:2px;background:rgba(255,255,255,.1);
+  border-radius:2px;margin-bottom:6px;
+}
+.thresh-marker{
+  position:absolute;top:-4px;width:2px;height:10px;
+  background:var(--yellow);border-radius:2px;
+}
+.thresh-label{
+  position:absolute;top:-22px;font-size:9px;color:var(--yellow);
+  transform:translateX(-50%);white-space:nowrap;
+}
+
+.metrics-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+}
+.metric-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:10px 8px;text-align:center;
+}
+.metric-card .m-val{font-size:15px;font-weight:700;color:var(--accent);}
+.metric-card .m-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;margin-top:2px;letter-spacing:.3px;}
+
+.heatmap-section{padding:12px 16px;}
+.heatmap-section h4{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
+.heatmap-section img{
+  width:100%;border-radius:10px;border:1px solid var(--border);
+  display:block;
+}
+
+/* ── Untrained warning ────────────────────────────────────────── */
+.untrained-banner{
+  margin:20px;padding:16px;border-radius:12px;
+  background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.3);
+  text-align:center;
+}
+.untrained-banner .ub-icon{font-size:28px;margin-bottom:8px;}
+.untrained-banner h3{font-size:14px;font-weight:600;color:var(--yellow);margin-bottom:6px;}
+.untrained-banner p{font-size:12px;color:var(--muted);line-height:1.6;}
+.untrained-banner code{
+  display:block;margin-top:10px;background:var(--card);
+  border:1px solid var(--border);border-radius:6px;
+  padding:8px;font-size:11px;color:var(--accent);
+  text-align:left;white-space:pre-wrap;word-break:break-all;
+}
+
+/* ── Toast ────────────────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:20px;right:20px;background:var(--card);
+  border:1px solid var(--border);border-radius:10px;
+  padding:12px 18px;font-size:13px;color:var(--text);
+  box-shadow:0 8px 30px rgba(0,0,0,.4);
+  transform:translateY(80px);opacity:0;transition:all .3s;z-index:999;
+}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.error{border-color:var(--red);color:var(--red);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────── -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">IJ</div>
+        <div>
+          <h1>I-JEPA Detector</h1>
+          <p>Anomaly Detection System</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-search">
+      <input type="text" id="searchInput" placeholder="Search categories..." oninput="filterCats()"/>
+    </div>
+
+    <div class="cat-list" id="catList"></div>
+
+    <div class="sidebar-footer">
+      <div class="legend">
+        <div class="leg"><div class="leg-dot" style="background:var(--green);box-shadow:0 0 5px var(--green-glow)"></div> Trained</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--border)"></div> Not trained</div>
+      </div>
+      Shri Ramdeobaba College &bull; Group A-5
+    </div>
+  </div>
+
+  <!-- ── Main ─────────────────────────────────────────────────── -->
+  <div class="main">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="cat-title" id="topTitle">Select a Category</div>
+        <div class="badge untrained" id="topBadge">Not Trained</div>
+      </div>
+      <div class="topbar-stats" id="topStats" style="display:none">
+        <div class="stat"><div class="stat-val" id="statAUC">—</div><div class="stat-lbl">ROC-AUC</div></div>
+        <div class="stat"><div class="stat-val" id="statF1">—</div><div class="stat-lbl">F1 Score</div></div>
+      </div>
+    </div>
+
+    <!-- Upload strip -->
+    <div class="upload-strip">
+      <label>
+        <span>📁</span> Upload Custom Image
+        <input type="file" id="uploadInput" accept=".png,.jpg,.jpeg" onchange="handleUpload(event)"/>
+      </label>
+      <span id="uploadHint">Select a category first, then upload any image to test</span>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Image panel -->
+      <div class="img-panel">
+        <div class="tabs" id="tabs"></div>
+        <div class="grid-scroll">
+          <div id="imgGrid" class="img-grid"></div>
+          <div id="emptyState" class="empty-state">
+            <div class="icon">🏭</div>
+            <p>Select a category from the sidebar<br>to browse its images</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result panel -->
+      <div class="result-panel">
+        <div class="result-header">Detection Result</div>
+
+        <!-- Idle -->
+        <div class="result-idle" id="resultIdle">
+          <div class="idle-icon">🔬</div>
+          <p>Click any image in the grid to run I-JEPA anomaly detection on it.</p>
+        </div>
+
+        <!-- Loading -->
+        <div class="result-loading" id="resultLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">Running I-JEPA analysis...</div>
+        </div>
+
+        <!-- Result -->
+        <div class="result-content" id="resultContent">
+
+          <!-- Verdict box -->
+          <div class="verdict-box" id="verdictBox">
+            <div class="verdict-icon" id="verdictIcon">✅</div>
+            <div class="verdict-label" id="verdictLabel">NORMAL</div>
+            <div class="verdict-sub" id="verdictSub">No defect detected</div>
+          </div>
+
+          <!-- Score bar -->
+          <div class="score-section">
+            <div class="score-row">
+              <span class="lbl">Anomaly Score</span>
+              <span class="val" id="scoreVal">—</span>
+            </div>
+            <div class="score-bar-wrap">
+              <div class="score-bar" id="scoreBar" style="width:0%"></div>
+            </div>
+            <div class="thresh-line">
+              <div class="thresh-marker" id="threshMarker">
+                <span class="thresh-label" id="threshLabel">Threshold</span>
+              </div>
+            </div>
+            <div class="score-row" style="margin-top:4px">
+              <span class="lbl">Threshold</span>
+              <span class="val" id="threshVal">—</span>
+            </div>
+          </div>
+
+          <!-- Metrics -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="m-val" id="mAUC">—</div>
+              <div class="m-lbl">ROC-AUC</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-val" id="mF1">—</div>
+              <div class="m-lbl">F1 Score</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-val" id="mAP">—</div>
+              <div class="m-lbl">Avg Prec</div>
+            </div>
+          </div>
+
+          <!-- Heatmap -->
+          <div class="heatmap-section">
+            <h4>Patch Anomaly Heatmap</h4>
+            <img id="heatmapImg" src="" alt="heatmap"/>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- .content -->
+  </div><!-- .main -->
+</div><!-- .app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────
+let allCats     = [];
+let activeCat   = null;
+let activeTab   = 'good';
+let imageData   = {};   // { good:[...], defect_types:{...} }
+
+// ── Init ───────────────────────────────────────────────────────────
+(async () => {
+  const res  = await fetch('/api/categories');
+  allCats    = await res.json();
+  renderCatList(allCats);
+})();
+
+// ── Sidebar ────────────────────────────────────────────────────────
+function renderCatList(cats) {
+  const el = document.getElementById('catList');
+  el.innerHTML = '';
+  cats.forEach(cat => {
+    const div = document.createElement('div');
+    div.className = 'cat-item' + (cat.trained ? ' trained-cat' : '') + (activeCat && activeCat.id === cat.id ? ' active' : '');
+    div.dataset.id = cat.id;
+    div.innerHTML = `
+      <div class="cat-dot ${cat.trained ? 'trained' : 'untrained'}"></div>
+      <div class="cat-name">${cat.name}</div>
+      ${cat.roc_auc ? `<div class="cat-auc">${cat.roc_auc}</div>` : ''}
+    `;
+    div.onclick = () => selectCategory(cat);
+    el.appendChild(div);
+  });
+}
+
+function filterCats() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allCats.filter(c => c.name.toLowerCase().includes(q) || c.id.includes(q));
+  renderCatList(filtered);
+}
+
+// ── Select category ────────────────────────────────────────────────
+async function selectCategory(cat) {
+  activeCat = cat;
+
+  // Sidebar highlight
+  document.querySelectorAll('.cat-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === cat.id);
+  });
+
+  // Topbar
+  document.getElementById('topTitle').textContent = cat.name;
+  const badge = document.getElementById('topBadge');
+  badge.textContent = cat.trained ? 'Trained' : 'Not Trained';
+  badge.className   = 'badge ' + (cat.trained ? 'trained' : 'untrained');
+
+  const statsEl = document.getElementById('topStats');
+  if (cat.trained && cat.roc_auc) {
+    statsEl.style.display = 'flex';
+    document.getElementById('statAUC').textContent = cat.roc_auc;
+    document.getElementById('statF1').textContent  = cat.f1 || '—';
+  } else {
+    statsEl.style.display = 'none';
+  }
+
+  // Reset result panel
+  showIdle();
+
+  // Load images
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('imgGrid').innerHTML = '<div style="color:var(--muted);font-size:12px;padding:20px;">Loading images...</div>';
+  document.getElementById('tabs').innerHTML = '';
+
+  const res  = await fetch(`/api/images?category=${cat.id}`);
+  imageData  = await res.json();
+  activeTab  = 'good';
+  buildTabs();
+  renderGrid('good');
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────
+function buildTabs() {
+  const el   = document.getElementById('tabs');
+  el.innerHTML = '';
+
+  const goodCount = imageData.good.length;
+  addTab(el, 'good', `Good`, goodCount, false);
+
+  Object.keys(imageData.defect_types).forEach(dt => {
+    const n = imageData.defect_types[dt].length;
+    addTab(el, dt, dt.replace(/_/g,' '), n, true);
+  });
+}
+
+function addTab(container, key, label, count, isDefect) {
+  const div = document.createElement('div');
+  div.className = 'tab' + (key === activeTab ? ' active' : '') + (isDefect ? ' defect-tab' : '');
+  div.innerHTML = `${label}<span class="tab-count">${count}</span>`;
+  div.onclick = () => { activeTab = key; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); div.classList.add('active'); renderGrid(key); };
+  container.appendChild(div);
+}
+
+// ── Image grid ─────────────────────────────────────────────────────
+function renderGrid(tab) {
+  const grid  = document.getElementById('imgGrid');
+  const paths = tab === 'good' ? imageData.good : (imageData.defect_types[tab] || []);
+  grid.innerHTML = '';
+
+  if (!paths.length) {
+    grid.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px;">No images found.</div>';
+    return;
+  }
+
+  paths.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'img-card';
+    const name = p.split('/').pop();
+    card.innerHTML = `
+      <img src="/api/image?path=${encodeURIComponent(p)}" alt="${name}" loading="lazy"/>
+      <div class="img-name">${name}</div>
+      <div class="run-btn">ANALYZE</div>
+    `;
+    card.onclick = () => analyzeImage(p, card);
+    grid.appendChild(card);
+  });
+}
+
+// ── Analyze ────────────────────────────────────────────────────────
+async function analyzeImage(path, cardEl) {
+  if (!activeCat) return;
+
+  // Highlight card
+  document.querySelectorAll('.img-card').forEach(c => c.classList.remove('active-card'));
+  if (cardEl) cardEl.classList.add('active-card');
+
+  showLoading();
+
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ path, category: activeCat.id })
+    });
+    const data = await res.json();
+
+    if (data.error) { showToast(data.error, true); showIdle(); return; }
+    showResult(data);
+  } catch(e) {
+    showToast('Network error: ' + e.message, true);
+    showIdle();
+  }
+}
+
+async function handleUpload(event) {
+  if (!activeCat) { showToast('Please select a category first.', true); return; }
+  const file = event.target.files[0];
+  if (!file) return;
+
+  showLoading();
+
+  const fd = new FormData();
+  fd.append('image', file);
+  fd.append('category', activeCat.id);
+
+  try {
+    const res  = await fetch('/api/upload', { method:'POST', body:fd });
+    const data = await res.json();
+    if (data.error) { showToast(data.error, true); showIdle(); return; }
+    showResult(data);
+  } catch(e) {
+    showToast('Upload failed: ' + e.message, true);
+    showIdle();
+  }
+
+  event.target.value = '';
+}
+
+// ── Result rendering ───────────────────────────────────────────────
+function showIdle()    { document.getElementById('resultIdle').style.display='flex'; document.getElementById('resultLoading').style.display='none'; document.getElementById('resultContent').style.display='none'; }
+function showLoading() { document.getElementById('resultIdle').style.display='none'; document.getElementById('resultLoading').style.display='flex'; document.getElementById('resultContent').style.display='none'; }
+
+function showResult(data) {
+  document.getElementById('resultIdle').style.display    = 'none';
+  document.getElementById('resultLoading').style.display = 'none';
+  document.getElementById('resultContent').style.display = 'flex';
+
+  const box   = document.getElementById('verdictBox');
+  const icon  = document.getElementById('verdictIcon');
+  const label = document.getElementById('verdictLabel');
+  const sub   = document.getElementById('verdictSub');
+
+  if (data.is_anomaly) {
+    box.className   = 'verdict-box anomaly';
+    icon.textContent = '🚨';
+    label.textContent = 'ANOMALY';
+    sub.textContent = 'Defect detected in this image';
+  } else {
+    box.className    = 'verdict-box normal';
+    icon.textContent = '✅';
+    label.textContent = 'NORMAL';
+    sub.textContent = 'No defect detected — looks good';
+  }
+
+  // Score bar (normalize score relative to threshold)
+  const score = data.score;
+  const thr   = data.threshold;
+  const maxS  = Math.max(score * 2, thr * 2, 0.001);
+  const pct   = Math.min((score / maxS) * 100, 100);
+  const thrPct = Math.min((thr   / maxS) * 100, 100);
+
+  document.getElementById('scoreVal').textContent  = score.toFixed(6);
+  document.getElementById('threshVal').textContent = thr.toFixed(6);
+
+  const bar = document.getElementById('scoreBar');
+  bar.style.width     = pct + '%';
+  bar.className       = 'score-bar ' + (data.is_anomaly ? 'anomaly-bar' : 'normal-bar');
+
+  const marker = document.getElementById('threshMarker');
+  marker.style.left   = thrPct + '%';
+
+  // Metrics
+  document.getElementById('mAUC').textContent = data.roc_auc  ?? '—';
+  document.getElementById('mF1').textContent  = data.f1       ?? '—';
+  document.getElementById('mAP').textContent  = data.avg_prec ?? '—';
+
+  // Heatmap
+  if (data.heatmap) {
+    document.getElementById('heatmapImg').src = `/heatmaps/${data.heatmap}?t=${Date.now()}`;
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────
+function showToast(msg, isErr=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = 'toast show' + (isErr ? ' error' : '');
+  setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+</script>
+</body>
+</html>
