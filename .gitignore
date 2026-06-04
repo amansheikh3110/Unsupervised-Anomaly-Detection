@@ -1,8 +1,26 @@
+# Presentation and Report files
+*.pptx
+*.ppt
+*.pdf
+PRESENTATION_CONTENT.txt
+PROJECT_EXPLAINED.md
+PROJECT_EXPLAINED_SIMPLE.md
+project_Guide.txt
+new_update.txt
+
+# Python scripts for creating presentations / reports
+build_ppt.py
+create_presentation.py
+update_report.py
+
+# Papers, images, visualizations, and results
+papers/
+Images/
+images/
+visualizations/
+
 # Project-specific ignores
 mvtec_anomaly_detection.tar.xz
-project_Guide.txt
-6th_sem_project_synopsis.pdf
-PROJECT_EXPLAINED_SIMPLE.md
 
 # Always track README (ensure it gets pushed)
 !README.md
@@ -136,9 +154,7 @@ temp/
 output/
 outputs/
 uploads/
-results/*
-!results/heatmaps/
-!results/heatmaps/*
+results/
 checkpoints/
 
 # Large media files
